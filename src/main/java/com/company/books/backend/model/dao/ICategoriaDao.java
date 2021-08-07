@@ -1,5 +1,9 @@
 package com.company.books.backend.model.dao;
 
-public interface ICategoriaDao {
+import org.springframework.data.repository.CrudRepository;
+
+import com.company.books.backend.model.Categoria;
+
+public interface ICategoriaDao extends CrudRepository<Categoria, Long> {
 
 }
