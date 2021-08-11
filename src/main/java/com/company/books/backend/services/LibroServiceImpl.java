@@ -50,6 +50,7 @@ public class LibroServiceImpl implements ILibroService{
 	}
 
 	@Override
+	@Transactional(readOnly=true)
 	public ResponseEntity<LibroResponseRest> buscarPorId(Long id) {
 		log.info( "inicio de metodo buscar libro  PorId()" );
 		LibroResponseRest response = new LibroResponseRest();
@@ -79,5 +80,100 @@ public class LibroServiceImpl implements ILibroService{
 		return new ResponseEntity<LibroResponseRest>(response, HttpStatus.OK);
 		
 	}
+
+	@Override
+	@Transactional
+	public ResponseEntity<LibroResponseRest> crear(Libro libro) {
+		log.info( "inicio de metodo crear libro" );
+		LibroResponseRest response = new LibroResponseRest();
+		List<Libro> list = new ArrayList<>();
+		
+		try {
+			
+			Libro libroguardado = libroDao.save(libro);
+			if(libroguardado  != null ) {
+				list.add(libroguardado);
+				response.getLibroResponse().setLibro(list);
+			} else {
+				log.error("Error al crear la catogoria");
+				response.setMetadata("Respuesta nok", "-1", "Libro no creada");
+				return new ResponseEntity<LibroResponseRest> (response, HttpStatus.BAD_REQUEST ); 
+			}
+			
+		}catch (Exception e) {
+			log.error("Error al crear el libro");
+			response.setMetadata("Respuesta nok", "-1", "Error al crear libro");
+			return new ResponseEntity<LibroResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR ); 
+		}
+		
+		response.setMetadata("Respuesta ok", "00", "libro creado");
+		return new ResponseEntity<LibroResponseRest>(response, HttpStatus.OK ); // devuelve 200
+		
+	}
+
+	@Override
+	@Transactional
+	public ResponseEntity<LibroResponseRest> actualizar(Libro libro, Long id) {
+		log.info( "inicio de metodo actualizar libro" );
+		LibroResponseRest response = new LibroResponseRest();
+		List<Libro> list = new ArrayList<>();
+		
+		Optional<Libro> libroBuscado = libroDao.findById(id);
+		
+		try { 
+			
+			if(libroBuscado.isPresent()) {
+				libroBuscado.get().setNombre(libro.getNombre());
+				libroBuscado.get().setDescripcion(libro.getDescripcion());
+				libroBuscado.get().setCategoria(libro.getCategoria() );
+				Libro libroActualizar = libroDao.save(libroBuscado.get());
+				
+				if( libroActualizar != null ) {
+					response.setMetadata("Respuesta ok", "00", "Libro actualizado");
+					list.add(libroActualizar);
+					response.getLibroResponse().setLibro(list);
+				}else {
+					log.error("Error al actualizar el libro");
+					response.setMetadata("Respuesta nok", "-1", "libro no actualizado");
+					return new ResponseEntity<LibroResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR );
+				}
+				
+				
+			} else {
+				log.error("Error al actualizar el libro");
+				response.setMetadata("Respuesta nok", "-1", "Libro no actualizado");
+				return new ResponseEntity<LibroResponseRest>(response, HttpStatus.NOT_FOUND ); 
+			}
+			
+		}catch (Exception e) {
+			log.error("Error al actualizar el libro", e.getMessage());
+			e.getStackTrace();
+			response.setMetadata("Respuesta nok", "-1", "libro no actualizado");
+			return new ResponseEntity<LibroResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR ); 
+		}
+		return new ResponseEntity<LibroResponseRest>(response, HttpStatus.OK ); // devuelve 200
+	}
+
+	@Override
+	@Transactional
+	public ResponseEntity<LibroResponseRest> eliminar(Long id) {
+		log.info( "inicio de metodo eliminar libro" );
+		LibroResponseRest response = new LibroResponseRest();
+		
+		try {
+			//eliminar libro
+			libroDao.deleteById(id);
+			response.setMetadata("Respuesta ok", "00", "Libro eliminado");
+			
+		}catch ( Exception e ){
+			log.error("Error al eliminar la catogoria", e.getMessage());
+			e.getStackTrace();
+			response.setMetadata("Respuesta nok", "-1", "Libro no eliminado");
+			return new ResponseEntity<LibroResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR ); 
+		}
+		
+		return new ResponseEntity<LibroResponseRest>(response, HttpStatus.OK ); // devuelve 200
+	}
+		
 	
 }
